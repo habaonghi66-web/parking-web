@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Quản lý bãi xe RFID</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Hệ thống quản lý bãi xe RFID</h1>
+      <div class="header-actions">
+        <span id="userInfo" class="pill"></span>
+        <button id="btnRefresh" class="btn">Refresh</button>
+        <label style="margin-left:8px;">
+          <input type="checkbox" id="chkAuto" checked /> Auto
+        </label>
+        <button id="btnManageStaff" class="btn primary hidden">Quản lý tài khoản nhân viên</button>
+        <button id="btnLogout" class="btn danger">Đăng xuất</button>
+      </div>
+    </div>
+
+    <div id="err" class="err"></div>
+    <div id="stats" class="row"></div>
+
+    <h2>Xe đang trong bãi</h2>
+    <div class="tableWrap">
+      <table>
+        <thead>
+          <tr>
+            <th>UID</th>
+            <th>Biển số</th>
+            <th>Loại xe</th>
+            <th>Giờ vào</th>
+            <th>Trạng thái</th>
+            <th>Ghi chú</th>
+            <th>Ảnh</th>
+            <th>Thao tác</th>
+          </tr>
+        </thead>
+        <tbody id="activeBody"></tbody>
+      </table>
+    </div>
+
+    <h2>Nhật ký ra/vào</h2>
+
+    <div class="filters">
+      <div class="field grow">
+        <label>Tìm kiếm (biển số / UID / note)</label>
+        <input id="txtSearch" placeholder="VD: 59A12345 hoặc UID..." />
+      </div>
+
+      <div class="field">
+        <label>Lọc IN/OUT</label>
+        <select id="selDir">
+          <option value="ALL">Tất cả</option>
+          <option value="IN">IN</option>
+          <option value="OUT">OUT</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Từ ngày</label>
+        <input id="dateFrom" type="date" />
+      </div>
+
+      <div class="field">
+        <label>Đến ngày</label>
+        <input id="dateTo" type="date" />
+      </div>
+
+      <div class="field">
+        <label>Số dòng log</label>
+        <select id="selLimit">
+          <option>50</option>
+          <option>100</option>
+          <option>200</option>
+          <option>500</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>&nbsp;</label>
+        <button id="btnSearchDate" class="btn primary">Tìm theo ngày</button>
+      </div>
+    </div>
+
+    <div class="tableWrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Biển số</th>
+            <th>Loại xe</th>
+            <th>IN/OUT</th>
+            <th>UID</th>
+            <th>Thời gian</th>
+            <th>Ghi chú</th>
+            <th>Ảnh</th>
+          </tr>
+        </thead>
+        <tbody id="eventsBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="modal" class="modal hidden">
+    <div class="modalContent">
+      <h3 id="modalTitle"></h3>
+      <img id="modalImg" />
+      <div style="margin-top:8px;text-align:right;">
+        <button id="btnClose" class="btn danger">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <button id="btnLostFloating" class="lost-fab">Danh sách xe mất thẻ</button>
+
+  <div id="lostModal" class="modal hidden">
+    <div class="modalBox">
+      <h3>Danh sách xe mất thẻ</h3>
+
+      <div style="display:flex; gap:8px; margin-bottom:10px;">
+        <button id="btnReloadLost" class="btn">Tải lại</button>
+        <button id="btnCloseLost" class="btn danger">Đóng</button>
+      </div>
+
+      <div class="field">
+        <label>Nhập biển số để tìm ảnh xe</label>
+        <input id="lostPlate" type="text" placeholder="VD: 59A12345" />
+      </div>
+
+      <div style="display:flex; gap:8px; margin-bottom:10px;">
+        <button id="btnFindLost" class="btn primary">Tìm ảnh xe</button>
+      </div>
+
+      <div class="field">
+        <label>Ảnh xe trong bãi</label>
+        <img id="lostVehicleImg" src="" alt="" />
+      </div>
+
+      <div class="field">
+        <label>Ảnh giấy tờ chứng minh (1 hoặc 2 ảnh)</label>
+        <input id="lostDocInput" type="file" accept="image/*" multiple />
+      </div>
+
+      <div class="field">
+        <label>Xem trước giấy tờ</label>
+        <img id="lostDocPreview" src="" alt="" />
+      </div>
+
+      <div style="display:flex; gap:8px; margin-top:10px;">
+        <button id="btnSendLost" class="btn primary">Gửi xác minh mất thẻ</button>
+      </div>
+
+      <hr style="margin:16px 0;border:none;border-top:1px solid #334155;" />
+      <div id="lostList"></div>
+    </div>
+  </div>
+
+  <div id="staffModal" class="modal hidden">
+    <div class="staffModalBox">
+      <div class="staffHeader">
+        <div>
+          <h3>Quản lý tài khoản nhân viên</h3>
+          <div class="staffSub">Admin có thể tạo, sửa, đổi mật khẩu, xóa hoặc khóa tài khoản nhân viên</div>
+        </div>
+        <button id="btnCloseStaff" class="btn danger">Đóng</button>
+      </div>
+
+      <div class="staffSectionTitle">Tạo tài khoản nhân viên</div>
+
+      <div class="staffCreateBox">
+        <div class="field">
+          <label>Tên đăng nhập</label>
+          <input id="staffUsername" type="text" placeholder="VD: nv06" />
+        </div>
+
+        <div class="field">
+          <label>Họ tên nhân viên</label>
+          <input id="staffFullName" type="text" placeholder="VD: Nguyễn Văn A" />
+        </div>
+
+        <div class="field">
+          <label>Mật khẩu</label>
+          <input id="staffPassword" type="text" placeholder="Nhập mật khẩu" />
+        </div>
+
+        <div class="field">
+          <label>&nbsp;</label>
+          <button id="btnCreateStaff" class="btn primary">Thêm nhân viên</button>
+        </div>
+      </div>
+
+      <div class="staffSectionTitle">Danh sách tài khoản nhân viên</div>
+
+      <div class="tableWrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Username</th>
+              <th>Họ tên</th>
+              <th>Trạng thái</th>
+              <th>Ngày tạo</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="staffBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

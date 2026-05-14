@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Đăng nhập - Hệ thống bãi giữ xe</title>
+  <style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    min-height: 100vh;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #fff;
+    background:
+      radial-gradient(circle at 15% 20%, rgba(0, 209, 255, 0.10), transparent 30%),
+      radial-gradient(circle at 80% 16%, rgba(128, 90, 213, 0.18), transparent 26%),
+      radial-gradient(circle at 50% 90%, rgba(47, 128, 237, 0.14), transparent 35%),
+      linear-gradient(135deg, #081120 0%, #0b1730 45%, #1b2550 100%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  body::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 38px 38px;
+    pointer-events: none;
+  }
+
+  .page {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .login-wrap {
+    width: 100%;
+    max-width: 980px;
+    display: grid;
+    grid-template-columns: 1fr 0.92fr;
+    overflow: hidden;
+    border-radius: 28px;
+    background: rgba(255,255,255,0.07);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(255,255,255,0.12);
+    box-shadow: 0 26px 56px rgba(0,0,0,0.34);
+  }
+
+  .hero {
+    padding: 34px 34px;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)),
+      radial-gradient(circle at 30% 20%, rgba(0,209,255,0.16), transparent 30%),
+      radial-gradient(circle at 80% 12%, rgba(128,90,213,0.24), transparent 32%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+
+  .logo-box {
+    width: 220px;
+    margin-bottom: 22px;
+    padding: 10px;
+    border-radius: 18px;
+    background: rgba(255,255,255,0.10);
+    border: 1px solid rgba(255,255,255,0.10);
+    box-shadow: 0 10px 22px rgba(0,0,0,0.20);
+  }
+
+  .logo-box img {
+    width: 100%;
+    display: block;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.94);
+  }
+
+  .tag {
+    display: inline-block;
+    margin-bottom: 14px;
+    padding: 7px 13px;
+    border-radius: 999px;
+    background: rgba(0, 209, 255, 0.12);
+    border: 1px solid rgba(0, 209, 255, 0.22);
+    color: #9bedff;
+    font-size: 13px;
+  }
+
+  .hero h1 {
+    font-size: clamp(28px, 3.5vw, 46px);
+    line-height: 1.15;
+    margin-bottom: 14px;
+    font-weight: 800;
+    max-width: 470px;
+  }
+
+  .hero p {
+    font-size: 16px;
+    color: rgba(255,255,255,0.84);
+    line-height: 1.7;
+    max-width: 470px;
+  }
+
+  .form-side {
+    background: rgba(255,255,255,0.96);
+    color: #111827;
+    padding: 32px 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .form-box {
+    width: 100%;
+    max-width: 340px;
+  }
+
+  .role-pill {
+    display: inline-block;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: #eef6ff;
+    color: #2563eb;
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+
+  .form-box h2 {
+    font-size: 28px;
+    margin-bottom: 8px;
+    font-weight: 800;
+    color: #0f172a;
+  }
+
+  .form-box p {
+    color: #64748b;
+    margin-bottom: 20px;
+    line-height: 1.6;
+    font-size: 14px;
+  }
+
+  .field {
+    margin-bottom: 14px;
+  }
+
+  .field label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #334155;
+  }
+
+  .field input {
+    width: 100%;
+    height: 48px;
+    border-radius: 14px;
+    border: 1px solid #dbe4f0;
+    outline: none;
+    padding: 0 15px;
+    font-size: 15px;
+    transition: .2s ease;
+    background: #fff;
+  }
+
+  .field input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+  }
+
+  .actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  .btn {
+    height: 50px;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 800;
+    transition: .2s ease;
+  }
+
+  .btn-primary {
+    color: #fff;
+    background: linear-gradient(135deg, #2563eb, #06b6d4);
+    box-shadow: 0 10px 22px rgba(37,99,235,0.22);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.03);
+  }
+
+  .btn-secondary {
+    background: #eef2f7;
+    color: #334155;
+  }
+
+  .btn-secondary:hover {
+    background: #e5ebf3;
+  }
+
+  .msg {
+    min-height: 22px;
+    margin-top: 12px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .msg.error { color: #dc2626; }
+  .msg.ok { color: #16a34a; }
+
+  @media (max-width: 860px) {
+    .login-wrap {
+      grid-template-columns: 1fr;
+    }
+
+    .hero {
+      padding: 28px 22px;
+    }
+
+    .logo-box {
+      width: 180px;
+    }
+
+    .form-side {
+      padding: 26px 18px;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="login-wrap">
+      <div class="hero">
+        <div class="logo-box">
+          <img src="/static/logo2.png" alt="Logo trường">
+        </div>
+        <div class="tag">SMART PARKING SYSTEM</div>
+        <h1>Hệ thống quản lý bãi giữ xe thông minh</h1>
+        <p>
+          Đăng nhập để tiếp tục sử dụng hệ thống quản lý phương tiện, theo dõi bãi xe và vận hành quy trình.
+        </p>
+      </div>
+
+      <div class="form-side">
+        <div class="form-box">
+          <div class="role-pill" id="rolePill">Vai trò: Nhân viên</div>
+          <h2>Đăng nhập</h2>
+          <p>Vui lòng nhập tài khoản và mật khẩu để tiếp tục.</p>
+
+          <div class="field">
+            <label for="username">Tên đăng nhập</label>
+            <input id="username" type="text" placeholder="Nhập tên đăng nhập">
+          </div>
+
+          <div class="field">
+            <label for="password">Mật khẩu</label>
+            <input id="password" type="password" placeholder="Nhập mật khẩu">
+          </div>
+
+          <div class="actions">
+            <button class="btn btn-primary" id="btnLogin">Đăng nhập</button>
+            <button class="btn btn-secondary" id="btnBack">← Quay lại chọn vai trò</button>
+          </div>
+
+          <div class="msg" id="msg"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const qs = new URLSearchParams(location.search);
+    const role = (qs.get("role") || "staff").toLowerCase();
+
+    const rolePill = document.getElementById("rolePill");
+    const msg = document.getElementById("msg");
+    const btnLogin = document.getElementById("btnLogin");
+    const btnBack = document.getElementById("btnBack");
+    const username = document.getElementById("username");
+    const password = document.getElementById("password");
+
+    rolePill.textContent = role === "admin" ? "Vai trò: Quản trị viên" : "Vai trò: Nhân viên";
+
+    btnBack.onclick = () => {
+      location.href = "/role";
+    };
+
+    function setMsg(text, ok = false) {
+      msg.textContent = text;
+      msg.className = ok ? "msg ok" : "msg error";
+    }
+
+    async function login() {
+      const user = username.value.trim();
+      const pass = password.value.trim();
+
+      if (!user || !pass) {
+        setMsg("Vui lòng nhập tên đăng nhập và mật khẩu.");
+        return;
+      }
+
+      btnLogin.disabled = true;
+      btnLogin.textContent = "Đang đăng nhập...";
+      setMsg("");
+
+      try {
+        const res = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: user,
+            password: pass,
+            role: role
+          })
+        });
+
+        const data = await res.json();
+
+        if (!data.ok) {
+          setMsg(data.msg || "Đăng nhập thất bại.");
+          btnLogin.disabled = false;
+          btnLogin.textContent = "Đăng nhập";
+          return;
+        }
+
+        setMsg("Đăng nhập thành công.", true);
+        setTimeout(() => {
+          location.href = "/";
+        }, 400);
+
+      } catch (e) {
+        setMsg("Không kết nối được máy chủ.");
+        btnLogin.disabled = false;
+        btnLogin.textContent = "Đăng nhập";
+      }
+    }
+
+    btnLogin.onclick = login;
+
+    password.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") login();
+    });
+
+    username.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") login();
+    });
+  </script>
+</body>
+</html>
