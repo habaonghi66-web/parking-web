@@ -765,3 +765,47 @@ tbody tr:hover {
   background: rgba(239, 68, 68, 0.15);
   color: #ef4444;
 }
+.slotGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 160px);
+  gap: 12px;
+  margin: 10px 0 22px 0;
+}
+
+.slotCard {
+  border-radius: 12px;
+  padding: 12px 8px;
+  text-align: center;
+  border: 1px solid #334155;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.16);
+}
+
+.slotName {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.slotStatus {
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.slotBusy {
+  background: rgba(34, 197, 94, 0.18);
+  border-color: #22c55e;
+  color: #bbf7d0;
+}
+
+.slotEmpty {
+  background: #1e293b;
+  border-color: #475569;
+  color: #e5e7eb;
+}
+
+@media (max-width: 800px) {
+  .slotGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

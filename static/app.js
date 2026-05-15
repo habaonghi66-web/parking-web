@@ -94,6 +94,29 @@ async function loadStats() {
   `;
 }
 
+async function loadSlots() {
+  const s = await jget("/api/slots");
+
+  const slots = [
+    { name: "SLOT 1", value: Number(s.s1 || 0) },
+    { name: "SLOT 2", value: Number(s.s2 || 0) },
+    { name: "SLOT 3", value: Number(s.s3 || 0) },
+    { name: "SLOT 4", value: Number(s.s4 || 0) },
+    { name: "SLOT 5", value: Number(s.s5 || 0) },
+  ];
+
+  $("slotGrid").innerHTML = slots.map(slot => {
+    const hasCar = slot.value === 1;
+
+    return `
+      <div class="slotCard ${hasCar ? "slotBusy" : "slotEmpty"}">
+        <div class="slotName">${slot.name}</div>
+        <div class="slotStatus">${hasCar ? "CÓ XE" : "TRỐNG"}</div>
+      </div>
+    `;
+  }).join("");
+}
+
 async function loadActive() {
   const rows = await jget("/api/active");
   const tb = $("activeBody");
@@ -186,6 +209,7 @@ async function refreshAll(isManual = false) {
       return;
     }
     await loadStats();
+    await loadSlots();
     await loadActive();
     await loadEvents();
   } catch (e) {
