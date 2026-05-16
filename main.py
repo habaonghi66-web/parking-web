@@ -36,6 +36,12 @@ SESSION_COOKIE = "parking_session"
 GATE_OPEN_UNTIL = 0
 SLOTS_STATE = {"s1": 0, "s2": 0, "s3": 0, "s4": 0, "s5": 0, "empty": CAPACITY, "ts": 0}
 
+LCD_LAST = {
+    "plate": "",
+    "direction": "",
+    "ts": 0
+}
+
 
 def trigger_gate(seconds: int = 3) -> int:
     global GATE_OPEN_UNTIL
@@ -255,7 +261,6 @@ def init_db():
 
 
 def get_current_user_from_request(request: Request):
-    # Web dùng cookie. App Android dùng Bearer token hoặc X-Session-Token.
     token = request.cookies.get(SESSION_COOKIE)
 
     if not token:
@@ -382,7 +387,6 @@ def login(data: Dict[str, Any] = Body(...)):
     conn = get_db()
     cur = conn.cursor()
 
-    # tìm user theo username
     cur.execute("""
         SELECT * FROM users
         WHERE username = ?
@@ -392,7 +396,6 @@ def login(data: Dict[str, Any] = Body(...)):
 
     if not user:
         conn.close()
-
         return JSONResponse(
             status_code=401,
             content={
@@ -402,37 +405,32 @@ def login(data: Dict[str, Any] = Body(...)):
             }
         )
 
-    # lấy password lưu trong DB
     stored_password = ""
 
     try:
         stored_password = user["password_hash"]
-    except:
+    except Exception:
         try:
             stored_password = user["password"]
-        except:
+        except Exception:
             stored_password = ""
 
     password_ok = False
 
-    # kiểm tra hash password
     try:
         if stored_password == hash_password(password):
             password_ok = True
-    except:
+    except Exception:
         pass
 
-    # kiểm tra password thường
     if stored_password == password:
         password_ok = True
 
-    # admin cố định
     if username == "admin" and password == "123456":
         password_ok = True
 
     if not password_ok:
         conn.close()
-
         return JSONResponse(
             status_code=401,
             content={
@@ -442,11 +440,9 @@ def login(data: Dict[str, Any] = Body(...)):
             }
         )
 
-    # kiểm tra active
     try:
         if int(user["is_active"] or 0) != 1:
             conn.close()
-
             return JSONResponse(
                 status_code=403,
                 content={
@@ -455,16 +451,13 @@ def login(data: Dict[str, Any] = Body(...)):
                     "msg": "Tài khoản đang bị khóa"
                 }
             )
-    except:
+    except Exception:
         pass
 
     user_role = (user["role"] or "staff").lower()
 
-    # kiểm tra role gửi lên
     if role_request and role_request not in ["admin", "staff"]:
-
         conn.close()
-
         return JSONResponse(
             status_code=400,
             content={
@@ -475,9 +468,7 @@ def login(data: Dict[str, Any] = Body(...)):
         )
 
     if role_request and user_role != role_request:
-
         conn.close()
-
         return JSONResponse(
             status_code=403,
             content={
@@ -488,24 +479,17 @@ def login(data: Dict[str, Any] = Body(...)):
         )
 
     full_name = user["full_name"] or user["username"]
-
     token = create_session(conn, username)
-
     conn.close()
 
     response = JSONResponse({
-
         "ok": True,
         "message": "Đăng nhập thành công",
         "msg": "Đăng nhập thành công",
-
-        # app android
         "token": token,
         "username": username,
         "role": user_role,
         "full_name": full_name,
-
-        # web cũ
         "user": {
             "username": username,
             "full_name": full_name,
@@ -730,10 +714,24 @@ def get_slots():
     return SLOTS_STATE
 
 
+@app.get("/api/lcd_status")
+def lcd_status():
+    now = int(time.time())
+
+    show_plate = False
+    if LCD_LAST["ts"] > 0 and (now - LCD_LAST["ts"]) <= 8:
+        show_plate = True
+
+    return {
+        "show_plate": show_plate,
+        "plate": LCD_LAST["plate"],
+        "direction": LCD_LAST["direction"],
+        "slots_left": SLOTS_STATE.get("empty", CAPACITY)
+    }
+
+
 @app.get("/api/stats")
 def stats():
-    # Số xe đang trong bãi phải lấy từ bảng active để khớp danh sách xe và lịch sử IN/OUT.
-    # Sensor slots chỉ để tham khảo, không dùng để ghi đè active_count.
     conn = get_db()
     cur = conn.cursor()
     cur.execute("SELECT COUNT(*) FROM active")
@@ -944,6 +942,7 @@ def get_events(
         })
     return result
 
+
 @app.post("/api/entry")
 async def entry(
     plate: str = Form(...),
@@ -953,6 +952,8 @@ async def entry(
     vehicle_type: str = Form(""),
     photo: Optional[UploadFile] = File(None)
 ):
+    global LCD_LAST
+
     plate = (plate or "").strip()
     uid = (uid or "").strip()
     direction = (direction or "").strip().upper()
@@ -1013,6 +1014,12 @@ async def entry(
         INSERT INTO events (plate, vehicle_type, uid, direction, note, image_url, ts)
         VALUES (?, ?, ?, ?, ?, ?, ?)
     """, (plate, vehicle_type, uid, direction, note, image_url, ts))
+
+    LCD_LAST = {
+        "plate": plate,
+        "direction": direction,
+        "ts": ts
+    }
 
     conn.commit()
     conn.close()
